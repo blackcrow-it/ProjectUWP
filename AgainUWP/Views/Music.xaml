@@ -1,0 +1,103 @@
+﻿<Page
+    x:Class="AgainUWP.Views.Music"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AgainUWP.Views"
+    xmlns:control="using:AgainUWP.Emtity"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <Style TargetType="control:CustomMediaTransportControls" x:Key="myTransportControlsStyle">
+            <!-- Style content ... -->
+        </Style>
+    </Page.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" Background="LightGray" Height="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Song" HorizontalAlignment="Left" Margin="40,13"/>
+            <SymbolIcon Grid.Column="0" Symbol="MusicInfo" HorizontalAlignment="Left" Margin="15,13"/>
+            <TextBlock Grid.Column="1" Text="Singer" HorizontalAlignment="Left" Margin="40,13"/>
+            <SymbolIcon Grid.Column="1" Symbol="Microphone" HorizontalAlignment="Left" Margin="15,13"/>
+            <TextBlock Grid.Column="2" Text="Composer" HorizontalAlignment="Left" Margin="40,13"/>
+            <SymbolIcon Grid.Column="2" Symbol="Contact" HorizontalAlignment="Left" Margin="15,13"/>
+            <TextBlock Grid.Column="3" Text="Time" HorizontalAlignment="Left" Margin="40,13"/>
+            <SymbolIcon Grid.Column="3" Symbol="Clock" HorizontalAlignment="Left" Margin="15,13"/>
+        </Grid>
+        <ScrollViewer Grid.Row="2">
+            <StackPanel>
+                <ProgressBar Height="100" Width="100"/>
+                
+                <Button Content="TEST" Click="test"/>
+            </StackPanel>
+        </ScrollViewer>
+        <!--<Grid Grid.Row="2" Height="90" Background="#FF1B6093">
+            -->
+        <MediaElement Grid.Row="1" AreTransportControlsEnabled="True" x:Name="mediaSimple">
+        </MediaElement>
+        <!--
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <PersonPicture HorizontalAlignment="Left" Margin="5" Width="80" Height="80"/>
+                <Grid Margin="10 0 0 0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="10*"/>
+                        <RowDefinition Height="8*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" x:Name="name_song" Text="Tên bài hát" VerticalAlignment="Bottom" Foreground="White" FontSize="18"/>
+                    <TextBlock Grid.Row="1" x:Name="singer_song" Text="Tên ca sĩ" FontWeight="Bold" Foreground="White"/>
+                </Grid>
+            </StackPanel>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <AppBarToggleButton Icon="Shuffle" ToolTipService.ToolTip="Shuffle" Foreground="White"/>
+                    <AppBarButton Icon="Previous" ToolTipService.ToolTip="Previous" Foreground="White" />
+                    <AppBarButton x:Name="btnPlay" Icon="Play" ToolTipService.ToolTip="Play" Foreground="White"/>
+                    <AppBarButton x:Name="btnNext" Icon="Next" ToolTipService.ToolTip="Next" Foreground="White"/>
+                    <AppBarToggleButton Icon="Refresh" ToolTipService.ToolTip="Repeat" Foreground="White" IsThreeState="True"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Text="00:00" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0 0 5 0" Foreground="White"/>
+                    <Slider x:Name="time_play" Width="300" VerticalAlignment="Center" Margin="0 10 0 0" Foreground="White" Background="#66FFFFFF" />
+                    <TextBlock Text="10:00" HorizontalAlignment="RIght" VerticalAlignment="Center" Margin="5 0 0 0" Foreground="White"/>
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <AppBarButton x:Name="icon_volume" ToolTipService.ToolTip="Volume" Foreground="White">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE995;"/>
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                    <Slider Width="100" VerticalAlignment="Center" Foreground="White" Background="#66FFFFFF"/>
+                    <AppBarButton Icon="More" Foreground="White"></AppBarButton>
+                </StackPanel>
+            </Grid>-->
+        
+        <!--</Grid>-->
+    </Grid>
+
+</Page>

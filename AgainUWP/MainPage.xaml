@@ -1,0 +1,53 @@
+﻿<Page
+    x:Class="AgainUWP.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AgainUWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <!--<Grid>
+        <Grid.Background>
+            <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/dog.gif" Opacity="0.5"/>
+        </Grid.Background>-->
+        <SplitView DisplayMode="CompactInline" IsPaneOpen="False" x:Name="SplitViews" Margin="0,-4,0,4">
+            <SplitView.PaneBackground>
+                #80FFFFFF
+            </SplitView.PaneBackground>
+            <SplitView.Pane>
+                <StackPanel>
+                <StackPanel.Background>
+                    <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/giot-nuoc.jpg" Opacity=".5"/>
+                </StackPanel.Background>
+                    <!--<TextBlock TextAlignment="Center" Text="Menu" Margin="0 10 0 10"/>-->
+                    <Button Margin="0 0 0 5" Click="Toggle_menu" Background="Transparent">
+                        <SymbolIcon Symbol="GlobalNavigationButton" HorizontalAlignment="Stretch" Height="20" Margin="0,0,0,0" VerticalAlignment="Top"/>
+                    </Button>
+                    <RadioButton Style="{ThemeResource TextBlockButtonStyle}" Tag="Account" HorizontalAlignment="Left" Margin="3 0 0 5" Click="RadioButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Contact" Margin="0 0 17 0"/>
+                            <TextBlock Text="Account"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{ThemeResource TextBlockButtonStyle}" Tag="Register" HorizontalAlignment="Left" Margin="3 0 0 5" Click="RadioButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="OtherUser" Margin="0 0 17 0"/>
+                            <TextBlock Text="Register"/>
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{ThemeResource TextBlockButtonStyle}" Tag="Music" HorizontalAlignment="Left" Margin="3 0 0 5" Click="RadioButton_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <SymbolIcon Symbol="Audio" Margin="0 0 17 0"/>
+                            <TextBlock Text="Music"/>
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+
+            </SplitView.Pane>
+            <SplitView.Content>
+                <Frame x:Name="MyFrame"/>
+            </SplitView.Content>
+        </SplitView>
+    <!--</Grid>-->
+</Page>
