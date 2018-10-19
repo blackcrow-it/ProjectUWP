@@ -17,7 +17,7 @@
         <TextBlock Text="" x:Name="errorEmail" Foreground="Red" FontStyle="Italic"/>
         <PasswordBox Header="Password" x:Name="pb_pass"/>
         <TextBlock Text="" x:Name="errorPassword" FontStyle="Italic" Foreground="Red"/>
-        <CheckBox Content="Remember Me"/>
+        <CheckBox x:Name="rememberCheck" Content="Remember Me"/>
         <HyperlinkButton Content="Register now" Click="ChangePage_Register"/>
     </StackPanel>
 </ContentDialog> 

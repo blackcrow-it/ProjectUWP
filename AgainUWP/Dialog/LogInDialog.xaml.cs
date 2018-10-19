@@ -9,6 +9,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -38,7 +39,9 @@ namespace AgainUWP.Dialog
             var httpResponseMessage = APIHandle.Sign_In(email, password);
             if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
             {
-                Handle.Login(email, password);
+                await Handle.Login(email, password);
+                Frame rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(Views.ListViewDemo));
             }
             else
             {
@@ -60,8 +63,14 @@ namespace AgainUWP.Dialog
                 }
                 args.Cancel = true;
             }
-            Frame rootFrame = Window.Current.Content as Frame;
-            rootFrame.Navigate(typeof(Views.Navigation));
+            if(rememberCheck.IsChecked == true)
+            {
+                Handle.WriteFile("remember.txt", "true");
+            } else
+            {
+                Handle.WriteFile("remember.txt", "");
+            }
+            //await Task.Delay(1000);
         }
 
         private async void ChangePage_Register(object sender, RoutedEventArgs e)

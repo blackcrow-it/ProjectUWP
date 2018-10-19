@@ -56,9 +56,9 @@ namespace AgainUWP.Dialog
             if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
             {
                 Debug.WriteLine("Success");
-                Handle.Login(currentMember.email, currentMember.password);
+                await Handle.Login(currentMember.email, currentMember.password);
                 Frame rootFrame = Window.Current.Content as Frame;
-                rootFrame.Navigate(typeof(Views.Navigation));
+                rootFrame.Navigate(typeof(Views.ListViewDemo));
             }
             else
             {

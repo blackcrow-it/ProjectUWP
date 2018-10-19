@@ -82,20 +82,6 @@ namespace AgainUWP.Views
                     //this.txt_address.Text = information.address;
                     //this.txt_intro.Text = information.introduction;
                     this.img_avatar.ImageSource = new BitmapImage(new Uri(information.avatar, UriKind.Absolute));
-                    //switch (information.gender)
-                    //{
-                    //    case 0:
-                    //        this.txt_gender.Text = "Male";
-                    //        break;
-                    //    case 1:
-                    //        this.txt_gender.Text = "Female";
-                    //        break;
-                    //    case 2:
-                    //        this.txt_gender.Text = "Other";
-                    //        break;
-                    //    default:
-                    //        break;
-                    //}
                 }
                 Debug.WriteLine(text);
             }

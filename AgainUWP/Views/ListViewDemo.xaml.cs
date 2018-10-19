@@ -1,4 +1,5 @@
-﻿using AgainUWP.Emtity;
+﻿using AgainUWP.Dialog;
+using AgainUWP.Emtity;
 using AgainUWP.Services;
 using Newtonsoft.Json;
 using System;
@@ -9,12 +10,17 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Core;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using Windows.Storage.Pickers;
 using Windows.Storage.Search;
+using Windows.Storage.Streams;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -23,6 +29,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using AgainUWP.Data;
+using Microsoft.Data.Sqlite;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -39,103 +47,74 @@ namespace AgainUWP.Views
         private double lastValueVolume;
         private int indexSong = 0;
         private string iconVolume = "\uE995";
+        private int OnTab = 1;
         TimeSpan _position;
+        Information information = new Information();
         DispatcherTimer _timer = new DispatcherTimer();
         private ObservableCollection<Song> listSong;
-        private ObservableCollection<Song> listSongLocal;
+        private ObservableCollection<Song> listSongRecent;
+        private ObservableCollection<SongLocal> listSongLocal;
         internal ObservableCollection<Song> ListSong { get => listSong; set => listSong = value; }
-        internal ObservableCollection<Song> ListSongLocal { get => listSongLocal; set => listSongLocal = value; }
+        internal ObservableCollection<SongLocal> ListSongLocal { get => listSongLocal; set => listSongLocal = value; }
+        internal ObservableCollection<Song> ListSongRecent { get => listSongRecent; set => listSongRecent = value; }
 
         public ListViewDemo()
         {
             this.ListSong = new ObservableCollection<Song>();
-            //this.ListSong.Add(new Song()
-            //{
-            //    name = "Hong Kong 1",
-            //    description = "Và giờ anh biết chuyện tình mình chẳng còn gì \nKhi nắng xuân sang lời mật ngọt còn thầm thì",
-            //    thumbnail = "https://znews-photo-td.zadn.vn/w1024/Uploaded/izhqv/2018_10_07/vEwP68qh2cKFSo3XwYKYDwhvsxyGwbA5mdTBvSU7.jpg",
-            //    singer = "Nguyễn Trọng Tài",
-            //    author = "Double X",
-            //    link = "https://od.lk/d/ODBfMjI4MDk1NF8/Hongkong1-Official-Version-Nguyen-Trong-Tai-San-Ji-Double-X.mp3"
-            //});
-            //this.ListSong.Add(new Song()
-            //{
-            //    name = "Nến Và Hoa",
-            //    description = "Buccellati lấp lánh ươm lên tay với nét mặt rạng ngời \nMaserati hai cánh ngăn cho em tách biệt đường đời ",
-            //    thumbnail = "https://i.ytimg.com/vi/D164TFHeOcI/maxresdefault.jpg",
-            //    singer = "Rhymatic - Touliver",
-            //    author = "Rhymatic",
-            //    link = "https://od.lk/d/ODBfMjI4MDk1Nl8/Da-Lo-Yeu-Em-Nhieu-Justatee-HOAPROX-Mix.mp3"
-            //});
+            this.ListSongRecent = new ObservableCollection<Song>();
+            this.ListSongLocal = new ObservableCollection<SongLocal>();
             this.InitializeComponent();
             LoadAllSong(ListSong);
+            LoadAllSongRecent(ListSongRecent);
             _timer.Interval = TimeSpan.FromMilliseconds(1000);
             _timer.Tick += TickTock;
             _timer.Start();
-            LoadAllSongLocal();
-            //LoadSong(ListSong[0]);
-            //PlayerMedia.AutoPlay = false;
-            //Debug.WriteLine(arraySong.SelectedIndex);
+            LoadSongInMusicLibrary();
+            GetAvatarHeader();
+            IsLogIn();
+            Windows.UI.Core.Preview.SystemNavigationManagerPreview.GetForCurrentView().CloseRequested +=
+        async (sender, args) =>
+        {
+            args.Handled = true;
+            Debug.WriteLine("Close");
+            //if(Handle.ReadFile("remember.txt") == null)
+            //{
+            //    Handle.WriteFile("credential.txt", "");
+            //}
+            //var result = await SaveConfirm.ShowAsync();
+            //if (result == ContentDialogResult.Primary)
+            //{
+            //    // Save work;
+            //}
+            //else
+            //{
+            //    App.Current.Exit();
+            //}
+        };
+
+        }
+        private void LoadToPlaySong(ObservableCollection<Song> ListSongs, int index, ListView listView)
+        {
+            Pause_Song();
+            LoadSong(ListSongs[index]);
+            time_play.Value = 0;
+            PlayerMedia.AutoPlay = true;
+            Play_Song();
+            listView.SelectedIndex = indexSong;
+        }
+        private void LoadToPlaySongLocal(ObservableCollection<SongLocal> ListSongsLocal, int index, ListView listView)
+        {
+            Pause_Song();
+            LoadSongLocal(ListSongsLocal[index]);
+            time_play.Value = 0;
+            PlayerMedia.AutoPlay = true;
+            Play_Song();
+            listView.SelectedIndex = index;
         }
 
-        private async void Do_Add(object sender, RoutedEventArgs e)
+        private async static void LoadAllSong(ObservableCollection<Song> listSong)
         {
-            var song = new Song()
-            {
-                name = song_name.Text,
-                thumbnail = song_thumbnail.Text,
-                description = song_description.Text,
-                link = song_link.Text,
-                author = song_author.Text,
-                singer = song_singer.Text
-            };
-            
-            string token;
-            try
-            {
-                name.Text = description.Text = singer.Text = author.Text = thumbnail.Text = link.Text = "";
-                token = await APIHandle.GetToken();
-                var httpResponseMessage = APIHandle.Create_Song(song, "Basic", token);
-                if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
-                {
-                    ContentDialog noWifiDialog = new ContentDialog()
-                    {
-                        Title = "Message",
-                        Content = "Upload Success.",
-                        CloseButtonText = "Ok"
-                    };
-                    ListSong.Add(song);
-                    await noWifiDialog.ShowAsync();
-                    song_name.Text = song_description.Text = song_singer.Text = song_author.Text = song_thumbnail.Text = song_link.Text = "";
-                }
-                else
-                {
-                    var errorJson = await httpResponseMessage.Result.Content.ReadAsStringAsync();
-                    ErrorResponse errResponse = JsonConvert.DeserializeObject<ErrorResponse>(errorJson);
-                    foreach (var errorField in errResponse.error.Keys)
-                    {
-                        TextBlock textBlock = this.FindName(errorField) as TextBlock;
-                        if (textBlock != null)
-                        {
-                            textBlock.Text = "*" + errResponse.error[errorField];
-                            Debug.WriteLine("'" + errorField + "' : '" + errResponse.error[errorField] + "'");
-                            textBlock.Visibility = Visibility.Visible;
-                            textBlock.Foreground = new SolidColorBrush(Colors.Red);
-                            textBlock.FontSize = 10;
-                            //textBlock.FontStyle = FontStyle.Static;
-                        }
-                    }
-                    Debug.WriteLine("Upload Fail");
-                }
-            }
-            catch
-            {
-                Debug.WriteLine("Error");
-            }
-        }
-
-        private async static void LoadAllSong(ObservableCollection<Song> ListSong)
-        {
+            listSong.Clear();
             string token;
             try
             {
@@ -145,14 +124,45 @@ namespace AgainUWP.Views
                 var SongModel = JsonConvert.DeserializeObject<ObservableCollection<Song>>(informationJson);
                 foreach (var data in SongModel)
                 {
-                    ListSong.Add(data);
-                    //Debug.WriteLine(data.name + " : " +data.thumbnail); ;
+                    listSong.Insert(0, data);
                 }
             }
             catch
             {
                 Debug.WriteLine("Error");
             }
+        }
+        private async static void LoadAllSongRecent(ObservableCollection<Song> listSongRecent)
+        {
+            listSongRecent.Clear();
+            using (SqliteConnection db =
+                new SqliteConnection("Filename=Song.db"))
+            {
+                db.Open();
+                SqliteCommand selectCommand = new SqliteCommand
+                    ("SELECT name, description, singer, author, thumbnail, link FROM Recent ORDER BY updatedAt DESC LIMIT 5;", db);
+                SqliteDataReader query = selectCommand.ExecuteReader();
+                while (query.Read())
+                {
+                    Debug.WriteLine(query.GetString(0));
+                    Debug.WriteLine(query.GetString(1));
+                    Debug.WriteLine(query.GetString(2));
+                    Debug.WriteLine(query.GetString(3));
+                    Debug.WriteLine(query.GetString(4));
+                    Debug.WriteLine(query.GetString(5));
+                    listSongRecent.Add(new Song
+                    {
+                        name = query.GetString(0),
+                        description = query.GetString(1),
+                        singer = query.GetString(2),
+                        author = query.GetString(3),
+                        thumbnail = query.GetString(4),
+                        link = query.GetString(5),
+                    });
+                }
+                db.Close();
+            }
+            Debug.WriteLine("Ok");
         }
 
         private void Grid_Tapped(object sender, TappedRoutedEventArgs e)
@@ -161,13 +171,25 @@ namespace AgainUWP.Views
             Song song = grid.Tag as Song;
             indexSong = arraySong.SelectedIndex;
             LoadSong(song);
+            DataHandle.AddRecentSong(song);
+            LoadAllSongRecent(ListSongRecent);
             PlayerMedia.AutoPlay = true;
             Play_Song();
+            OnTab = 1;
+        }
+        private void Grid_Tapped_2(object sender, TappedRoutedEventArgs e)
+        {
+            Grid grid = sender as Grid;
+            Song song = grid.Tag as Song;
+            indexSong = arraySongRecent.SelectedIndex;
+            LoadSong(song);
+            PlayerMedia.AutoPlay = true;
+            Play_Song();
+            OnTab = 2;
         }
 
         private void LoadSong(Emtity.Song currentSong)
         {
-            this.name_song.Text = "Loading...";
             try
             {
                 PlayerMedia.Source = new Uri(currentSong.link);
@@ -176,20 +198,105 @@ namespace AgainUWP.Views
             catch
             {
                 PlayerMedia.Source = new Uri("https://mp3.zing.vn/bai-hat/Nen-Va-Hoa-Touliver-Remix-Touliver-Rhymastic/ZW9D89D8.html?play_song=1.mp3");
-                //Debug.WriteLine("error load uri");
             }
             this.name_song.Text = currentSong.name;
             this.singer_song.Text = currentSong.singer;
-            this.avatar_song.DisplayName = currentSong.singer;
+            //this.avatar_song. = currentSong.singer;
             try
             {
-                this.avatar_song.ProfilePicture = new BitmapImage(new Uri(currentSong.thumbnail, UriKind.Absolute));
+                this.avatar_song.ImageSource = new BitmapImage(new Uri(currentSong.thumbnail, UriKind.Absolute));
             }
             catch
             {
                 Debug.WriteLine("error uri thumnail");
-                this.avatar_song.ProfilePicture = null;
+                this.avatar_song.ImageSource = new BitmapImage(new Uri("https://cdn1.iconfinder.com/data/icons/music-12/96/CD-2-512.png", UriKind.Absolute));
             }
+        }
+        private void LoadSongLocal(Emtity.SongLocal currentSong)
+        {
+            time_play.Value = 0;
+            PlayerMedia.SetSource(currentSong.stream, currentSong.type);
+            PlayerMedia.AutoPlay = true;
+            this.name_song.Text = currentSong.name;
+            this.singer_song.Text = currentSong.singer;
+            //this.avatar_song.DisplayName = currentSong.singer;
+            this.avatar_song.ImageSource = currentSong.thumnail;
+        }
+        private async void LoadSongFromFolder(IReadOnlyList<StorageFile> files)
+        {
+            if (files.Count > 0)
+            {
+                foreach (StorageFile file in files)
+                {
+                    MusicProperties musicProperties = await file.Properties.GetMusicPropertiesAsync();
+                    //Debug.WriteLine(file.Path);
+                    const uint requestedSize = 190;
+                    const ThumbnailMode thumbnailMode = ThumbnailMode.MusicView;
+                    const ThumbnailOptions thumbnailOptions = ThumbnailOptions.UseCurrentScale;
+                    var thumbnailAvatar = await file.GetThumbnailAsync(thumbnailMode, requestedSize, thumbnailOptions);
+                    await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    async () =>
+                    {
+                        BitmapImage bitmapImage = new BitmapImage();
+                        bitmapImage.SetSource(thumbnailAvatar);
+                        ListSongLocal.Add(new SongLocal()
+                        {
+                            name = musicProperties.Title,
+                            singer = musicProperties.Artist,
+                            author = musicProperties.AlbumArtist,
+                            album = musicProperties.Album,
+                            time = musicProperties.Duration.ToString().Split('.')[0],
+                            thumnail = bitmapImage,
+                            stream = await file.OpenAsync(FileAccessMode.Read),
+                            type = file.ContentType
+                        });
+                    }
+                    );
+                }
+            }
+        }
+        private async void LoadSongInMusicLibrary()
+        {
+            QueryOptions queryOption = new QueryOptions
+        (CommonFileQuery.OrderByTitle, new string[] { ".mp3" });
+
+            queryOption.FolderDepth = FolderDepth.Deep;
+
+            Queue<IStorageFolder> folders = new Queue<IStorageFolder>();
+
+            var files = await KnownFolders.MusicLibrary.CreateFileQueryWithOptions
+              (queryOption).GetFilesAsync();
+            ListSongLocal.Clear();
+            LoadSongFromFolder(files);
+        }
+
+        private async void ChooseFolderLocal_Click(object sender, RoutedEventArgs e)
+        {
+            FolderPicker folderPicker = new FolderPicker();
+            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+            folderPicker.FileTypeFilter.Add(".mp3");
+            StorageFolder folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                ListSongLocal.Clear();
+                LinkFolderLocal.Text = folder.Path;
+                //get the file list
+                var files = await folder.GetFilesAsync(CommonFileQuery.OrderByName).AsTask().ConfigureAwait(false);
+
+                //For example, I can use the following code to play the first item
+                LoadSongFromFolder(files);
+            }
+        }
+
+        private void Grid_Tapped_1(object sender, TappedRoutedEventArgs e)
+        {
+            Debug.WriteLine(arraySongLocal.SelectedIndex);
+            Grid grid = sender as Grid;
+            SongLocal selectedSong = grid.Tag as SongLocal;
+            indexSong = arraySongLocal.SelectedIndex;
+            LoadSongLocal(selectedSong);
+            Play_Song();
+            OnTab = 3;
         }
         private void btnPlay_Click(object sender, RoutedEventArgs e)
         {
@@ -207,7 +314,6 @@ namespace AgainUWP.Views
             PlayerMedia.Play();
             btnPlay.Icon = new SymbolIcon(Symbol.Pause);
             isPlaying = true;
-            Debug.WriteLine(arraySong.SelectedIndex);
         }
         private void Pause_Song()
         {
@@ -250,16 +356,16 @@ namespace AgainUWP.Views
             }
             isVolume = true;
         }
-        private void AutoNext()
+        private void AutoNextSong(ObservableCollection<Song> ListSongs, ListView listView)
         {
             if (btnShuffle.IsChecked == true)
             {
                 Random random = new Random();
-                indexSong = random.Next(0, (ListSong.Count));
+                indexSong = random.Next(0, (ListSongs.Count));
             }
             else
             {
-                if (indexSong < ListSong.Count - 1 && indexSong >= 0)
+                if (indexSong < ListSongs.Count - 1 && indexSong >= 0)
                 {
                     indexSong = indexSong + 1;
                 }
@@ -268,46 +374,78 @@ namespace AgainUWP.Views
                     indexSong = 0;
                 }
             }
-            LoadSong(ListSong[indexSong]);
+            LoadToPlaySong(ListSongs, indexSong, listView);
+        }
+        private void AutoNextSongLocal(ObservableCollection<SongLocal> ListSongsLocal, ListView listViewLocal)
+        {
+            if (btnShuffle.IsChecked == true)
+            {
+                Random random = new Random();
+                indexSong = random.Next(0, (ListSongsLocal.Count));
+            }
+            else
+            {
+                if (indexSong < ListSongsLocal.Count - 1 && indexSong >= 0)
+                {
+                    indexSong = indexSong + 1;
+                }
+                else
+                {
+                    indexSong = 0;
+                }
+            }
             if (indexSong == 0)
             {
                 time_play.Value = 0;
             }
-            PlayerMedia.AutoPlay = true;
-            Play_Song();
-            arraySong.SelectedIndex = indexSong;
+            LoadToPlaySongLocal(ListSongsLocal, indexSong, listViewLocal);
         }
 
         private void btnNext_Click(object sender, RoutedEventArgs e)
         {
             PlayerMedia.Stop();
-            if (btnRepeat.IsChecked == null)
+            switch (OnTab)
             {
-                indexSong = indexSong;
-            }
-            else
-            {
-                if (btnShuffle.IsChecked == true)
-                {
-                    Random random = new Random();
-                    indexSong = random.Next(0, (ListSong.Count));
-                }
-                else
-                {
-                    if (indexSong < ListSong.Count - 1 && indexSong >= 0)
+                case 1:
+                    if (btnRepeat.IsChecked == null)
                     {
-                        indexSong = indexSong + 1;
+                        indexSong = indexSong;
+                        LoadToPlaySong(ListSong, indexSong, arraySong);
+                        DataHandle.AddRecentSong(ListSong[indexSong]);
+                        LoadAllSongRecent(ListSongRecent);
                     }
                     else
                     {
-                        indexSong = 0;
+                        AutoNextSong(ListSong, arraySong);
+                        DataHandle.AddRecentSong(ListSong[indexSong]);
+                        LoadAllSongRecent(ListSongRecent);
                     }
-                }
+                    break;
+                case 2:
+                    if (btnRepeat.IsChecked == null)
+                    {
+                        indexSong = indexSong;
+                        LoadToPlaySong(ListSongRecent, indexSong, arraySongRecent);
+                    }
+                    else
+                    {
+                        AutoNextSong(ListSongRecent, arraySongRecent);
+                    }
+                    break;
+                case 3:
+                    if (btnRepeat.IsChecked == null)
+                    {
+                        indexSong = indexSong;
+                        LoadToPlaySongLocal(ListSongLocal, indexSong, arraySongLocal);
+                    }
+                    else
+                    {
+                        AutoNextSongLocal(ListSongLocal, arraySongLocal);
+                    }
+                    break;
+                default:
+                    break;
             }
-            LoadSong(ListSong[indexSong]);
-            PlayerMedia.AutoPlay = true;
-            Play_Song();
-            arraySong.SelectedIndex = indexSong;
         }
 
         private void Volume_Click(object sender, RoutedEventArgs e)
@@ -343,32 +481,93 @@ namespace AgainUWP.Views
         private void btnPrevious_Click(object sender, RoutedEventArgs e)
         {
             PlayerMedia.Stop();
-            if(PlayerMedia.Position.TotalSeconds > 5 || btnRepeat.IsChecked == null)
+            switch (OnTab)
             {
-                indexSong = indexSong;
-            } else
-            {
-                if (btnShuffle.IsChecked == true)
-                {
-                    Random random = new Random();
-                    indexSong = random.Next(0, (ListSong.Count));
-                }
-                else
-                {
-                    if (indexSong > 0)
+                case 1:
+                    if (PlayerMedia.Position.TotalSeconds > 5 || btnRepeat.IsChecked == null)
                     {
-                        indexSong = indexSong - 1;
+                        indexSong = indexSong;
                     }
                     else
                     {
-                        indexSong = 0;
+                        if (btnShuffle.IsChecked == true)
+                        {
+                            Random random = new Random();
+                            indexSong = random.Next(0, (ListSong.Count));
+                        }
+                        else
+                        {
+                            if (indexSong > 0)
+                            {
+                                indexSong = indexSong - 1;
+                            }
+                            else
+                            {
+                                indexSong = 0;
+                            }
+                        }
                     }
-                }
+                    LoadToPlaySong(ListSong, indexSong, arraySong);
+                    DataHandle.AddRecentSong(ListSong[indexSong]);
+                    LoadAllSongRecent(ListSongRecent);
+                    break;
+                case 2:
+                    if (PlayerMedia.Position.TotalSeconds > 5 || btnRepeat.IsChecked == null)
+                    {
+                        indexSong = indexSong;
+                    }
+                    else
+                    {
+                        if (btnShuffle.IsChecked == true)
+                        {
+                            Random random = new Random();
+                            indexSong = random.Next(0, (ListSongRecent.Count));
+                        }
+                        else
+                        {
+                            if (indexSong > 0)
+                            {
+                                indexSong = indexSong - 1;
+                            }
+                            else
+                            {
+                                indexSong = 0;
+                            }
+                        }
+                    }
+                    LoadToPlaySong(ListSongRecent, indexSong, arraySongRecent);
+                    DataHandle.AddRecentSong(ListSongRecent[indexSong]);
+                    LoadAllSongRecent(ListSongRecent);
+                    break;
+                case 3:
+                    if (PlayerMedia.Position.TotalSeconds > 5 || btnRepeat.IsChecked == null)
+                    {
+                        indexSong = indexSong;
+                    }
+                    else
+                    {
+                        if (btnShuffle.IsChecked == true)
+                        {
+                            Random random = new Random();
+                            indexSong = random.Next(0, (ListSongLocal.Count));
+                        }
+                        else
+                        {
+                            if (indexSong > 0)
+                            {
+                                indexSong = indexSong - 1;
+                            }
+                            else
+                            {
+                                indexSong = 0;
+                            }
+                        }
+                    }
+                    LoadToPlaySongLocal(ListSongLocal, indexSong, arraySongLocal);
+                    break;
+                default:
+                    break;
             }
-            LoadSong(ListSong[indexSong]);
-            PlayerMedia.AutoPlay = true;
-            Play_Song();
-            arraySong.SelectedIndex = indexSong;
         }
         private void TickTock(object sender, object e)
         {
@@ -391,7 +590,6 @@ namespace AgainUWP.Views
             time_play.Minimum = 0;
             time_play.Maximum = PlayerMedia.NaturalDuration.TimeSpan.TotalSeconds;
             time_play.Value = PlayerMedia.Position.TotalSeconds;
-            //Debug.WriteLine(PlayerMedia.Position.TotalSeconds);
         }
         private void Timer_Tick(object sender, EventArgs e)
         {
@@ -408,53 +606,32 @@ namespace AgainUWP.Views
             double SliderValue = time_play.Value;
             TimeSpan ts = TimeSpan.FromSeconds(SliderValue);
             PlayerMedia.Position = ts;
-            //time_play.Value = PlayerMedia.Position.TotalSeconds;
-        }
-
-        private void btnShuffle_Checked(object sender, RoutedEventArgs e)
-        {
-            
         }
 
         private void btnRepeat_Click(object sender, RoutedEventArgs e)
         {
-            if(btnRepeat.IsChecked == null)
+            if (btnRepeat.IsChecked == null)
             {
                 btnRepeat.Icon = new SymbolIcon(Symbol.RepeatOne);
-            } else if (btnRepeat.IsChecked == false)
+            }
+            else if (btnRepeat.IsChecked == false)
             {
                 btnRepeat.Icon = new SymbolIcon(Symbol.RepeatAll);
-            } else
+            }
+            else
             {
                 btnRepeat.Icon = new SymbolIcon(Symbol.RepeatAll);
             }
             Debug.WriteLine(btnRepeat.IsChecked);
         }
-
-        private void song_thumbnail_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            try
-            {
-                thumbnailImage.ProfilePicture = new BitmapImage(new Uri(song_thumbnail.Text, UriKind.Absolute));
-            }
-            catch
-            {
-                thumbnailImage.ProfilePicture = null;
-            }
-        }
-
-        private void Do_Reset(object sender, RoutedEventArgs e)
-        {
-            song_name.Text = song_description.Text = song_singer.Text = song_author.Text = song_thumbnail.Text = song_link.Text = "";
-        }
-
         private void PlayerMedia_CurrentStateChanged(object sender, RoutedEventArgs e)
         {
             if (PlayerMedia.CurrentState.ToString() == "Opening")
             {
                 ProgressSong.Visibility = Visibility.Visible;
                 TimelineSong.Visibility = Visibility.Collapsed;
-            } else
+            }
+            else
             {
                 ProgressSong.Visibility = Visibility.Collapsed;
                 TimelineSong.Visibility = Visibility.Visible;
@@ -462,79 +639,266 @@ namespace AgainUWP.Views
             if (PlayerMedia.CurrentState.ToString() == "Buffering")
             {
                 BufferingSong.Visibility = Visibility.Visible;
-            } else
+            }
+            else
             {
                 BufferingSong.Visibility = Visibility.Collapsed;
             }
             if (PlayerMedia.CurrentState.ToString() == "Closed")
             {
-                if (arraySong.SelectedIndex == ListSong.Count)
+                switch (OnTab)
                 {
-                    //Pause_Song();
+                    case 1:
+                        if (arraySong.SelectedIndex == ListSong.Count)
+                        {
+                            //Pause_Song();
+                        }
+                        else
+                        {
+                            AutoNextSong(ListSong, arraySong);
+                            DataHandle.AddRecentSong(ListSong[indexSong]);
+                            LoadAllSongRecent(ListSongRecent);
+                        }
+                        break;
+                    case 2:
+                        if (arraySongRecent.SelectedIndex == ListSongRecent.Count)
+                        {
+                            //Pause_Song();
+                        }
+                        else
+                        {
+                            AutoNextSong(ListSongRecent, arraySongRecent);
+                            Play_Song();
+                        }
+                        break;
+                    case 3:
+                        if (arraySongLocal.SelectedIndex == ListSongLocal.Count)
+                        {
+                            //Pause_Song();
+                        }
+                        else
+                        {
+                            AutoNextSongLocal(ListSongLocal, arraySongLocal);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                else
-                {
-                    AutoNext();
-                }
+
             }
-            //Debug.WriteLine(PlayerMedia.CurrentState);
+            Debug.WriteLine(PlayerMedia.CurrentState);
         }
 
 
         private void PlayerMedia_MediaEnded(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine(arraySong.SelectedIndex +" = "+ ListSong.Count);
-            if(btnRepeat.IsChecked == false)
+            switch (OnTab)
             {
-                if (arraySong.SelectedIndex == (ListSong.Count - 1) )
-                {
-                    AutoNext();
-                    PlayerMedia.AutoPlay = false;
-                    btnPlay.Icon = new SymbolIcon(Symbol.Play);
-                    isPlaying = false;
-                }
-                else
-                {
-                    AutoNext();
-                }
-            } else if (btnRepeat.IsChecked == true)
-            {
-                AutoNext();
-            } else if (btnRepeat.IsChecked == null)
-            {
-                Pause_Song();
-                LoadSong(ListSong[indexSong]);
-                Play_Song();
-                arraySong.SelectedIndex = indexSong;
+                case 1:
+                    if (btnRepeat.IsChecked == false)
+                    {
+                        if (arraySong.SelectedIndex == (ListSong.Count - 1))
+                        {
+                            AutoNextSong(ListSong, arraySong);
+                            PlayerMedia.AutoPlay = false;
+                            btnPlay.Icon = new SymbolIcon(Symbol.Play);
+                            isPlaying = false;
+                        }
+                        else
+                        {
+                            AutoNextSong(ListSong, arraySong);
+                            DataHandle.AddRecentSong(ListSong[indexSong]);
+                            LoadAllSongRecent(ListSongRecent);
+                        }
+                    }
+                    else if (btnRepeat.IsChecked == true)
+                    {
+                        AutoNextSong(ListSong, arraySong);
+                        DataHandle.AddRecentSong(ListSong[indexSong]);
+                        LoadAllSongRecent(ListSongRecent);
+                    }
+                    else if (btnRepeat.IsChecked == null)
+                    {
+                        LoadToPlaySong(ListSong, indexSong, arraySong);
+                        DataHandle.AddRecentSong(ListSong[indexSong]);
+                        LoadAllSongRecent(ListSongRecent);
+                    }
+                    break;
+                case 2:
+                    if (btnRepeat.IsChecked == false)
+                    {
+                        if (arraySongRecent.SelectedIndex == (ListSongLocal.Count - 1))
+                        {
+                            AutoNextSong(ListSongRecent, arraySongRecent);
+                            PlayerMedia.AutoPlay = false;
+                            btnPlay.Icon = new SymbolIcon(Symbol.Play);
+                            isPlaying = false;
+                        }
+                        else
+                        {
+                            AutoNextSong(ListSongRecent, arraySongRecent);
+                        }
+                    }
+                    else if (btnRepeat.IsChecked == true)
+                    {
+                        AutoNextSong(ListSongRecent, arraySongRecent);
+                    }
+                    else if (btnRepeat.IsChecked == null)
+                    {
+                        LoadToPlaySong(ListSongRecent, indexSong, arraySongRecent);
+                    }
+                    break;
+                case 3:
+                    if (btnRepeat.IsChecked == false)
+                    {
+                        if (arraySongLocal.SelectedIndex == (ListSongLocal.Count - 1))
+                        {
+                            AutoNextSongLocal(ListSongLocal, arraySongLocal);
+                            PlayerMedia.AutoPlay = false;
+                            btnPlay.Icon = new SymbolIcon(Symbol.Play);
+                            isPlaying = false;
+                        }
+                        else
+                        {
+                            AutoNextSongLocal(ListSongLocal, arraySongLocal);
+                        }
+                    }
+                    else if (btnRepeat.IsChecked == true)
+                    {
+                        AutoNextSongLocal(ListSongLocal, arraySongLocal);
+                    }
+                    else if (btnRepeat.IsChecked == null)
+                    {
+                        LoadToPlaySongLocal(ListSongLocal, indexSong, arraySongLocal);
+                    }
+                    break;
+                default:
+                    break;
             }
+
+
             //Debug.WriteLine(btnRepeat.IsChecked + " : " + PlayerMedia.IsLooping);
         }
 
-        private async void LoadAllSongLocal()
+        private async void SignUp_Click(object sender, RoutedEventArgs e)
         {
-            QueryOptions queryOption = new QueryOptions
-            (CommonFileQuery.OrderByTitle, new string[] { ".mp3", ".mp4", ".wma" });
+            RegisterDialog register = new RegisterDialog();
+            await register.ShowAsync();
+        }
 
-            queryOption.FolderDepth = FolderDepth.Deep;
+        private async void SignIn_Click(object sender, RoutedEventArgs e)
+        {
+            LogInDialog login = new LogInDialog();
+            await login.ShowAsync();
+        }
 
-            Queue<IStorageFolder> folders = new Queue<IStorageFolder>();
+        private async void Get_Information(object sender, RoutedEventArgs e)
+        {
+            InformationDialog infor = new InformationDialog();
+            await infor.ShowAsync();
+        }
 
-            var files = await KnownFolders.MusicLibrary.CreateFileQueryWithOptions
-              (queryOption).GetFilesAsync();
-            Debug.WriteLine(files[0].Name);
-            var fileone = files[0];
-            var bitmap = new BitmapImage();
-            var stream = await files[0].OpenReadAsync();
-            var path = files[0].Path;
-            Stream streamer = stream.AsStreamForRead();
-            //await bitmap.SetSourceAsync(stream);
-            Debug.WriteLine(path);
-            //PlayerLocal.Source = new Uri(path);
+        private async void GetAvatarHeader()
+        {
+            string text = await APIHandle.CheckCredential();
+            if (text != "")
+            {
+                string token = await APIHandle.GetToken();
+                Debug.WriteLine(token);
+                if (token != "")
+                {
+                    var httpResponseMessage = APIHandle.GetData(APIUrl.API_INFORMATION, "Basic", token);
+                    Debug.WriteLine(httpResponseMessage.Result.StatusCode);
+                    if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
+                    {
+                        var informationJson = await httpResponseMessage.Result.Content.ReadAsStringAsync();
+                        //Debug.WriteLine(informationJson);
+                        information = JsonConvert.DeserializeObject<Information>(informationJson);
+                        try
+                        {
+                            this.avtarHeader.ProfilePicture = new BitmapImage(new Uri(information.avatar, UriKind.Absolute));
+                        }
+                        catch
+                        {
 
-            //foreach (var file in files)
-            //{
-            //    Debug.WriteLine(file.Name);
-            //}
+                        }
+
+                    }
+
+                }
+            }
+        }
+
+        private void SignOut_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Handle.WriteFile("credential.txt", "");
+                Frame rootFrame = Window.Current.Content as Frame;
+                rootFrame.Navigate(typeof(Views.ListViewDemo));
+                Debug.WriteLine("Logout");
+            }
+            catch
+            {
+                Debug.WriteLine("Error Logout");
+            }
+        }
+        private async void IsLogIn()
+        {
+            string text = await APIHandle.CheckCredential();
+            Debug.WriteLine(text != "");
+            if (text != "")
+            {
+                string token = await APIHandle.GetToken();
+                var httpResponseMessage = APIHandle.GetData(APIUrl.API_INFORMATION, "Basic", token);
+                //Debug.WriteLine(httpResponseMessage.Result.StatusCode);
+                if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
+                {
+                    btnAddSong.Visibility = Visibility.Visible;
+                    btnInfor.Visibility = Visibility.Visible;
+                    messageError.Visibility = Visibility.Collapsed;
+                    arraySong.Visibility = Visibility.Visible;
+                    btnSign.Visibility = Visibility.Collapsed;
+                    Debug.WriteLine("Visible");
+                }
+                else
+                {
+                    btnAddSong.Visibility = Visibility.Collapsed;
+                    btnInfor.Visibility = Visibility.Collapsed;
+                    messageError.Visibility = Visibility.Visible;
+                    arraySong.Visibility = Visibility.Collapsed;
+                    btnSign.Visibility = Visibility.Visible;
+                    Debug.WriteLine("Collapsed 1");
+                }
+
+            }
+            else
+            {
+                btnAddSong.Visibility = Visibility.Collapsed;
+                btnInfor.Visibility = Visibility.Collapsed;
+                messageError.Visibility = Visibility.Visible;
+                arraySong.Visibility = Visibility.Collapsed;
+                btnSign.Visibility = Visibility.Visible;
+                Debug.WriteLine("Collapsed 2");
+            }
+        }
+
+        private async void AddSong_Click(object sender, RoutedEventArgs e)
+        {
+            AddSongDialog addsong = new AddSongDialog();
+            await addsong.ShowAsync();
+        }
+
+        private async void HyperlinkSignIn(object sender, RoutedEventArgs e)
+        {
+            LogInDialog logInDialog = new LogInDialog();
+            await logInDialog.ShowAsync();
+        }
+
+        private async void HyperlinkSignUp(object sender, RoutedEventArgs e)
+        {
+            RegisterDialog registerDialog = new RegisterDialog();
+            await registerDialog.ShowAsync();
         }
     }
 }

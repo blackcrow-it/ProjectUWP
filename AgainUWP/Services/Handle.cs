@@ -2,23 +2,27 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace AgainUWP.Services
 {
     class Handle
     {
-        public async static void Login(string email, string password)
+        public async static Task
+Login(string email, string password)
         {
             var tokenJson = await APIHandle.Sign_In(email, password).Result.Content.ReadAsStringAsync();
             Credential tokenResponse = JsonConvert.DeserializeObject<Credential>(tokenJson);
             string jsonUser = JsonConvert.SerializeObject(tokenResponse);
             try
             {
-                WriteFile("credential.txt", jsonUser);
+                await WriteFile("credential.txt", jsonUser);
                 Debug.WriteLine("Success: " + jsonUser);
             }
             catch
@@ -26,7 +30,8 @@ namespace AgainUWP.Services
                 Debug.WriteLine("Fail: " + jsonUser);
             }
         }
-        public async static void WriteFile(string file_name, string text)
+        public async static Task
+WriteFile(string file_name, string text)
         {
             Windows.Storage.StorageFolder storageFolder = Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile sampleFile =

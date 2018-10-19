@@ -12,9 +12,9 @@
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
     CloseButtonText="Cancel">
-    <ContentDialog.Background>
+    <!--<ContentDialog.Background>
         <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/sidebar.jpg" Opacity=".5"/>
-    </ContentDialog.Background>
+    </ContentDialog.Background>-->
     <ScrollViewer>
         <StackPanel Width="470" Margin="0 0 0 0">
             <ProgressRing x:Name="progress1" Visibility="Collapsed"/>
@@ -34,21 +34,21 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Row="0" Grid.Column="0" x:Name="box_firstname" Header="Fisrt Name *" Margin="0 0 20 0" TextChanged="box_firstname_TextChanged"/>
+                <TextBox Grid.Row="0" Grid.Column="0" x:Name="box_firstname" PlaceholderText="Fisrt Name *" Margin="0 5 20 0" BorderThickness="0 0 0 1" TextChanged="box_firstname_TextChanged"/>
                 <TextBlock Grid.Row="1" Grid.Column="0" x:Name="firstName" Margin="2 0 20 0" Visibility="Collapsed"/>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="box_lastname" Header="Last Name *" Margin="0 0 20 0" TextChanged="box_lastname_TextChanged"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="box_lastname" PlaceholderText="Last Name *" Margin="0 5 20 0" BorderThickness="0 0 0 1" TextChanged="box_lastname_TextChanged"/>
                 <TextBlock Grid.Row="1" Grid.Column="1" x:Name="lastName" Margin="2 0 20 0" Visibility="Collapsed"/>
-                <CalendarDatePicker Grid.Column="2" Header="Birthday *" HorizontalAlignment="Center" VerticalAlignment="Center" DateChanged="Do_Changed" Width="157"/>
+                <CalendarDatePicker Grid.Column="2" PlaceholderText="Birthday *" Margin="0 5 0 0" HorizontalAlignment="Center" VerticalAlignment="Center" BorderThickness="0 0 0 1" DateChanged="Do_Changed" Width="157"/>
                 <TextBlock Grid.Row="1" Grid.Column="2" x:Name="birthday" Margin="2 0 0 0" Visibility="Collapsed"/>
-                <TextBox Grid.Row="2" Grid.Column="0" x:Name="box_email" Header="Email *" Margin="0 5 20 0" VerticalAlignment="Top"/>
+                <TextBox Grid.Row="2" Grid.Column="0" x:Name="box_email" PlaceholderText="Email *" Margin="0 10 20 0" BorderThickness="0 0 0 1" VerticalAlignment="Top"/>
                 <TextBlock Grid.Row="3" Grid.Column="0" x:Name="email" Margin="2 0 20 0" Visibility="Collapsed"/>
-                <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="pwd_password" Header="Password *" Margin="0 5 20 0" VerticalAlignment="Top"/>
+                <PasswordBox Grid.Row="2" Grid.Column="1" x:Name="pwd_password" PlaceholderText="Password *" Margin="0 10 20 0" BorderThickness="0 0 0 1" VerticalAlignment="Top"/>
                 <TextBlock Grid.Row="3" Grid.Column="1" x:Name="password" Margin="2 0 20 0" Visibility="Collapsed"/>
-                <TextBox Grid.Row="2" Grid.Column="2" x:Name="box_phone" Header="Phone *" Margin="0 5 0 0" VerticalAlignment="Top"/>
+                <TextBox Grid.Row="2" Grid.Column="2" x:Name="box_phone" PlaceholderText="Phone *" Margin="0 10 0 0" BorderThickness="0 0 0 1" VerticalAlignment="Top"/>
                 <TextBlock Grid.Row="3" Grid.Column="2" x:Name="phone"  Margin="2 0 0 0" Visibility="Collapsed"/>
             </Grid>
-            <TextBlock HorizontalAlignment="Left" Text="Gender *" Margin="0 5 0 0" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <Grid>
+            <!--<TextBlock HorizontalAlignment="Left" Text="Gender *" Margin="0 5 0 0" TextWrapping="Wrap" VerticalAlignment="Top"/>-->
+            <Grid Margin="0 10 0 0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -70,9 +70,9 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBox Grid.Column="0" Grid.Row="0" x:Name="box_address" AcceptsReturn="True" Header="Address *" Margin="0 5 20 0" Height="100"/>
+                <TextBox Grid.Column="0" Grid.Row="0" x:Name="box_address" AcceptsReturn="True" PlaceholderText="Address *" Margin="0 10 20 0" Height="100"/>
                 <TextBlock Grid.Column="0" Grid.Row="1" x:Name="address" Margin="0 0 20 0" Visibility="Collapsed"/>
-                <TextBox Grid.Column="1" Grid.Row="0" x:Name="box_introduction" AcceptsReturn="True" Header="Introduction" Margin="20 5 0 0" Height="100"/>
+                <TextBox Grid.Column="1" Grid.Row="0" x:Name="box_introduction" AcceptsReturn="True" PlaceholderText="Introduction" Margin="20 10 0 0" Height="100"/>
                 <TextBlock Grid.Column="1" Grid.Row="1" x:Name="introduction" Margin="20 0 0 0" Text="" Visibility="Collapsed"/>
             </Grid>
 
