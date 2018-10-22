@@ -13,31 +13,22 @@
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
 
-    <Grid Grid.Column="0" Background="#F2F2F2" Width="400">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Grid.Column="0" Margin="10 20 10 10">
+    <StackPanel Grid.Column="0">
+        
             <PersonPicture x:Name="thumbnailImage" Width="75"/>
-            <TextBox Header="Link thumbnail" x:Name="song_thumbnail" Width="150" TextChanged="song_thumbnail_TextChanged"/>
+            <TextBox PlaceholderText="Link thumbnail" x:Name="song_thumbnail" Width="150" TextChanged="song_thumbnail_TextChanged" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
             <TextBlock x:Name="thumbnail" Visibility="Collapsed"/>
-        </StackPanel>
-        <Border Grid.Column="1" BorderBrush="#CCCCCC" BorderThickness="4" Margin="10">
-            <ScrollViewer>
-            <StackPanel Margin="20">
-                <TextBox Header="Name" x:Name="song_name"/>
+
+        <TextBox PlaceholderText="Name" x:Name="song_name" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
                 <TextBlock x:Name="name" Visibility="Collapsed"/>
-                <TextBox Header="Singer" x:Name="song_singer"/>
+        <TextBox PlaceholderText="Singer" x:Name="song_singer" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
                 <TextBlock x:Name="singer" Visibility="Collapsed"/>
-                <TextBox Header="Author" x:Name="song_author"/>
-                <TextBlock x:Name="author" Visibility="Collapsed"/>
-                <TextBox Header="Description" x:Name="song_description" AcceptsReturn="True" Height="100"/>
+        <TextBox PlaceholderText="Author" x:Name="song_author" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
+        <TextBlock x:Name="author" Visibility="Collapsed"/>
+        <TextBox PlaceholderText="Link mp3" x:Name="song_link" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
+        <TextBlock x:Name="link" Visibility="Collapsed"/>
+        <TextBox Header="Description" x:Name="song_description" AcceptsReturn="True" Height="100"/>
                 <TextBlock x:Name="description" Visibility="Collapsed"/>
-                <TextBox Header="Link mp3" x:Name="song_link"/>
-                    <TextBlock x:Name="link" Visibility="Collapsed"/>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
-    </Grid>
+
+    </StackPanel>
 </ContentDialog>

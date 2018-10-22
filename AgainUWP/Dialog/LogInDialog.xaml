@@ -13,10 +13,10 @@
 
     <StackPanel Margin="20 0 20 0">
         <TextBlock Text="" x:Name="errorMessage" Foreground="Red" FontStyle="Italic"/>
-        <TextBox Header="Email" x:Name="tb_email" FocusVisualPrimaryBrush="Black" Foreground="Black" BorderBrush="#66000000"/>
-        <TextBlock Text="" x:Name="errorEmail" Foreground="Red" FontStyle="Italic"/>
-        <PasswordBox Header="Password" x:Name="pb_pass"/>
-        <TextBlock Text="" x:Name="errorPassword" FontStyle="Italic" Foreground="Red"/>
+        <TextBox Header="Email" x:Name="tb_email" FocusVisualPrimaryBrush="Black" Foreground="Black" BorderBrush="#66000000" TextChanged="tb_email_TextChanged"/>
+        <TextBlock Text="" x:Name="email" Foreground="Red" FontStyle="Italic"/>
+        <PasswordBox Header="Password" x:Name="pb_pass" PasswordChanged="pb_pass_PasswordChanged"/>
+        <TextBlock Text="" x:Name="password" FontStyle="Italic" Foreground="Red"/>
         <CheckBox x:Name="rememberCheck" Content="Remember Me"/>
         <HyperlinkButton Content="Register now" Click="ChangePage_Register"/>
     </StackPanel>

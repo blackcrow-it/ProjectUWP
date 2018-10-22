@@ -31,6 +31,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using AgainUWP.Data;
 using Microsoft.Data.Sqlite;
+using System.Net.NetworkInformation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -48,15 +49,16 @@ namespace AgainUWP.Views
         private int indexSong = 0;
         private string iconVolume = "\uE995";
         private int OnTab = 1;
+        private bool isInternetConnected = NetworkInterface.GetIsNetworkAvailable();
         TimeSpan _position;
         Information information = new Information();
         DispatcherTimer _timer = new DispatcherTimer();
         private ObservableCollection<Song> listSong;
         private ObservableCollection<Song> listSongRecent;
         private ObservableCollection<SongLocal> listSongLocal;
-        internal ObservableCollection<Song> ListSong { get => listSong; set => listSong = value; }
-        internal ObservableCollection<SongLocal> ListSongLocal { get => listSongLocal; set => listSongLocal = value; }
-        internal ObservableCollection<Song> ListSongRecent { get => listSongRecent; set => listSongRecent = value; }
+        public ObservableCollection<SongLocal> ListSongLocal { get => listSongLocal; set => listSongLocal = value; }
+        public ObservableCollection<Song> ListSongRecent { get => listSongRecent; set => listSongRecent = value; }
+        public ObservableCollection<Song> ListSong { get => listSong; set => listSong = value; }
 
         public ListViewDemo()
         {
@@ -64,34 +66,17 @@ namespace AgainUWP.Views
             this.ListSongRecent = new ObservableCollection<Song>();
             this.ListSongLocal = new ObservableCollection<SongLocal>();
             this.InitializeComponent();
-            LoadAllSong(ListSong);
             LoadAllSongRecent(ListSongRecent);
             _timer.Interval = TimeSpan.FromMilliseconds(1000);
             _timer.Tick += TickTock;
             _timer.Start();
             LoadSongInMusicLibrary();
-            GetAvatarHeader();
-            IsLogIn();
-            Windows.UI.Core.Preview.SystemNavigationManagerPreview.GetForCurrentView().CloseRequested +=
-        async (sender, args) =>
-        {
-            args.Handled = true;
-            Debug.WriteLine("Close");
-            //if(Handle.ReadFile("remember.txt") == null)
-            //{
-            //    Handle.WriteFile("credential.txt", "");
-            //}
-            //var result = await SaveConfirm.ShowAsync();
-            //if (result == ContentDialogResult.Primary)
-            //{
-            //    // Save work;
-            //}
-            //else
-            //{
-            //    App.Current.Exit();
-            //}
-        };
-
+            if (isInternetConnected)
+            {
+                LoadAllSong(ListSong);
+                GetAvatarHeader();
+                IsLogIn();
+            }
         }
         private void LoadToPlaySong(ObservableCollection<Song> ListSongs, int index, ListView listView)
         {
@@ -102,7 +87,7 @@ namespace AgainUWP.Views
             Play_Song();
             listView.SelectedIndex = indexSong;
         }
-        private void LoadToPlaySongLocal(ObservableCollection<SongLocal> ListSongsLocal, int index, ListView listView)
+        private void LoadToPlaySongLocal(ObservableCollection<SongLocal> ListSongsLocal, int index, GridView listView)
         {
             Pause_Song();
             LoadSongLocal(ListSongsLocal[index]);
@@ -122,17 +107,24 @@ namespace AgainUWP.Views
                 var httpResponseMessage = APIHandle.GetData(APIUrl.API_SONG, "Basic", token);
                 var informationJson = await httpResponseMessage.Result.Content.ReadAsStringAsync();
                 var SongModel = JsonConvert.DeserializeObject<ObservableCollection<Song>>(informationJson);
+
                 foreach (var data in SongModel)
                 {
                     listSong.Insert(0, data);
                 }
+                for(int i = listSong.Count - 1; i == 10; i--)
+                {
+                    //listSong.RemoveAt(i);
+                    
+                }
+                Debug.WriteLine("i");
             }
             catch
             {
                 Debug.WriteLine("Error");
             }
         }
-        private async static void LoadAllSongRecent(ObservableCollection<Song> listSongRecent)
+        private static void LoadAllSongRecent(ObservableCollection<Song> listSongRecent)
         {
             listSongRecent.Clear();
             using (SqliteConnection db =
@@ -144,12 +136,6 @@ namespace AgainUWP.Views
                 SqliteDataReader query = selectCommand.ExecuteReader();
                 while (query.Read())
                 {
-                    Debug.WriteLine(query.GetString(0));
-                    Debug.WriteLine(query.GetString(1));
-                    Debug.WriteLine(query.GetString(2));
-                    Debug.WriteLine(query.GetString(3));
-                    Debug.WriteLine(query.GetString(4));
-                    Debug.WriteLine(query.GetString(5));
                     listSongRecent.Add(new Song
                     {
                         name = query.GetString(0),
@@ -290,7 +276,7 @@ namespace AgainUWP.Views
 
         private void Grid_Tapped_1(object sender, TappedRoutedEventArgs e)
         {
-            Debug.WriteLine(arraySongLocal.SelectedIndex);
+            //Debug.WriteLine(arraySongLocal.SelectedIndex);
             Grid grid = sender as Grid;
             SongLocal selectedSong = grid.Tag as SongLocal;
             indexSong = arraySongLocal.SelectedIndex;
@@ -376,7 +362,7 @@ namespace AgainUWP.Views
             }
             LoadToPlaySong(ListSongs, indexSong, listView);
         }
-        private void AutoNextSongLocal(ObservableCollection<SongLocal> ListSongsLocal, ListView listViewLocal)
+        private void AutoNextSongLocal(ObservableCollection<SongLocal> ListSongsLocal, GridView listViewLocal)
         {
             if (btnShuffle.IsChecked == true)
             {
@@ -454,14 +440,12 @@ namespace AgainUWP.Views
             {
                 if (volume_song.Value == 0)
                 {
-                    Debug.WriteLine(lastValueVolume);
                     icon_volume.Glyph = "\uE995";
                     volume_song.Value = 100;
                     isVolume = true;
                 }
                 else
                 {
-                    Debug.WriteLine(valueVolume);
                     lastValueVolume = valueVolume;
                     icon_volume.Glyph = "\uE74F";
                     volume_song.Value = 0;
@@ -471,7 +455,6 @@ namespace AgainUWP.Views
             }
             else
             {
-                Debug.WriteLine(lastValueVolume);
                 icon_volume.Glyph = iconVolume;
                 volume_song.Value = lastValueVolume;
                 isVolume = true;
@@ -622,7 +605,6 @@ namespace AgainUWP.Views
             {
                 btnRepeat.Icon = new SymbolIcon(Symbol.RepeatAll);
             }
-            Debug.WriteLine(btnRepeat.IsChecked);
         }
         private void PlayerMedia_CurrentStateChanged(object sender, RoutedEventArgs e)
         {
@@ -686,7 +668,6 @@ namespace AgainUWP.Views
                 }
 
             }
-            Debug.WriteLine(PlayerMedia.CurrentState);
         }
 
 
@@ -804,11 +785,10 @@ namespace AgainUWP.Views
             if (text != "")
             {
                 string token = await APIHandle.GetToken();
-                Debug.WriteLine(token);
                 if (token != "")
                 {
                     var httpResponseMessage = APIHandle.GetData(APIUrl.API_INFORMATION, "Basic", token);
-                    Debug.WriteLine(httpResponseMessage.Result.StatusCode);
+                    //Debug.WriteLine(httpResponseMessage.Result.StatusCode);
                     if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
                     {
                         var informationJson = await httpResponseMessage.Result.Content.ReadAsStringAsync();
@@ -846,7 +826,6 @@ namespace AgainUWP.Views
         private async void IsLogIn()
         {
             string text = await APIHandle.CheckCredential();
-            Debug.WriteLine(text != "");
             if (text != "")
             {
                 string token = await APIHandle.GetToken();
@@ -859,7 +838,6 @@ namespace AgainUWP.Views
                     messageError.Visibility = Visibility.Collapsed;
                     arraySong.Visibility = Visibility.Visible;
                     btnSign.Visibility = Visibility.Collapsed;
-                    Debug.WriteLine("Visible");
                 }
                 else
                 {
@@ -868,7 +846,6 @@ namespace AgainUWP.Views
                     messageError.Visibility = Visibility.Visible;
                     arraySong.Visibility = Visibility.Collapsed;
                     btnSign.Visibility = Visibility.Visible;
-                    Debug.WriteLine("Collapsed 1");
                 }
 
             }
@@ -879,7 +856,6 @@ namespace AgainUWP.Views
                 messageError.Visibility = Visibility.Visible;
                 arraySong.Visibility = Visibility.Collapsed;
                 btnSign.Visibility = Visibility.Visible;
-                Debug.WriteLine("Collapsed 2");
             }
         }
 
@@ -899,6 +875,16 @@ namespace AgainUWP.Views
         {
             RegisterDialog registerDialog = new RegisterDialog();
             await registerDialog.ShowAsync();
+        }
+
+        private void SaveCustom_Click(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine(colorBackground.Color);
+            barMusic.Background = new SolidColorBrush(colorBackground.Color);
+            Application.Current.Resources["SystemControlHighlightListAccentLowBrush"] = new SolidColorBrush(colorBackground.Color);
+            Application.Current.Resources["SystemControlHighlightListAccentMediumBrush"] = new SolidColorBrush(colorBackground.Color);
+            //uriBackground.ImageSource = new BitmapImage(new Uri(linkBackground.Text));
+            Debug.WriteLine(Application.Current.Resources["SystemControlHighlightListAccentLowBrush"]);
         }
     }
 }

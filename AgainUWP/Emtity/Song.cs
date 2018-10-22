@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AgainUWP.Emtity
 {
-    class Song
+    public class Song
     {
         private long _id;
         private string _name;

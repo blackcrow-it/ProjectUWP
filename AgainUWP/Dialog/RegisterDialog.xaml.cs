@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -35,10 +36,17 @@ namespace AgainUWP.Dialog
         private Member currentMember;
         private StorageFile photo;
         private string currentUploadUrl;
+        private bool resultFirstName = false;
+        private bool resultLastName = false;
+        private bool resultEmail = false;
+        private bool resultPassword = false;
+        private bool resultPhone = false;
+        private bool resultAddress = false;
         public RegisterDialog()
         {
             this.currentMember = new Member();
             this.InitializeComponent();
+            CheckSubmitEnable();
             //this.NavigationCacheMode = Windows.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
         }
 
@@ -71,11 +79,10 @@ namespace AgainUWP.Dialog
                 ErrorResponse errResponse = JsonConvert.DeserializeObject<ErrorResponse>(errorJson);
                 foreach (var errorField in errResponse.error.Keys)
                 {
-                    TextBlock textBlock = this.FindName(errorField) as TextBlock;
-                    if (textBlock != null)
+                    if (this.FindName(errorField) is TextBlock textBlock)
                     {
-                        textBlock.Text = "*"+errResponse.error[errorField];
-                        Debug.WriteLine("'"+errorField+"' : '"+ errResponse.error[errorField]+ "'");
+                        textBlock.Text = "*" + errResponse.error[errorField];
+                        Debug.WriteLine("'" + errorField + "' : '" + errResponse.error[errorField] + "'");
                         textBlock.Visibility = Visibility.Visible;
                         textBlock.Foreground = new SolidColorBrush(Colors.Red);
                         textBlock.FontSize = 10;
@@ -139,12 +146,6 @@ namespace AgainUWP.Dialog
                 wresp = await wr.GetResponseAsync();
                 Stream stream2 = wresp.GetResponseStream();
                 StreamReader reader2 = new StreamReader(stream2);
-                //Debug.WriteLine(string.Format("File uploaded, server response is: @{0}@", reader2.ReadToEnd()));
-                //string imgUrl = reader2.ReadToEnd();
-                //Uri u = new Uri(reader2.ReadToEnd(), UriKind.Absolute);
-                //Debug.WriteLine(u.AbsoluteUri);
-                //ImageUrl.Text = u.AbsoluteUri;
-                //MyAvatar.Source = new BitmapImage(u);
 
                 string imageUrl = reader2.ReadToEnd();
                 Debug.WriteLine(reader2.ReadToEnd());
@@ -164,9 +165,37 @@ namespace AgainUWP.Dialog
             {
                 wr = null;
             }
+            CheckSubmitEnable();
         }
 
-        private async void img_Avatar_Tapped(object sender, TappedRoutedEventArgs e)
+
+        private void box_firstname_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            img_Avatar.DisplayName = box_firstname.Text + " " + box_lastname.Text;
+            resultFirstName = Handle.ValidateinputTypeName(box_firstname.Text, firstName);
+            CheckSubmitEnable();
+        }
+
+        private void box_lastname_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            img_Avatar.DisplayName = box_firstname.Text + " " + box_lastname.Text;
+            resultLastName = Handle.ValidateinputTypeName(box_lastname.Text, lastName);
+            CheckSubmitEnable();
+        }
+
+        private void txb_UrlImage_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            try
+            {
+                img_Avatar.ProfilePicture = new BitmapImage(new Uri(txb_UrlImage.Text, UriKind.Absolute));
+            } catch
+            {
+                img_Avatar.ProfilePicture = null;
+            }
+            CheckSubmitEnable();
+        }
+
+        private async void Capture_Click(object sender, RoutedEventArgs e)
         {
             CameraCaptureUI captureUI = new CameraCaptureUI();
             captureUI.PhotoSettings.Format = CameraCaptureUIPhotoFormat.Jpeg;
@@ -186,24 +215,57 @@ namespace AgainUWP.Dialog
             HttpUploadFile(currentUploadUrl, "myFile", "image/png");
         }
 
-        private void box_firstname_TextChanged(object sender, TextChangedEventArgs e)
+        private async void ChooseFile_Click(object sender, RoutedEventArgs e)
         {
-            img_Avatar.DisplayName = box_firstname.Text + " " + box_lastname.Text;
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
+            photo = await picker.PickSingleFileAsync();
+            if (photo == null)
+            {
+                // User cancelled photo capture
+                return;
+            }
+            HttpClient httpClient = new HttpClient();
+            currentUploadUrl = await httpClient.GetStringAsync(Services.APIUrl.GET_UPLOAD_TOKEN);
+            Debug.WriteLine(currentUploadUrl);
+            HttpUploadFile(currentUploadUrl, "myFile", "image/png");
         }
 
-        private void box_lastname_TextChanged(object sender, TextChangedEventArgs e)
+        private void box_email_TextChanged(object sender, TextChangedEventArgs e)
         {
-            img_Avatar.DisplayName = box_firstname.Text + " " + box_lastname.Text;
+            resultEmail = Handle.ValidateinputTypeEmail(box_email.Text, email);
+            CheckSubmitEnable();
         }
 
-        private void txb_UrlImage_TextChanged(object sender, TextChangedEventArgs e)
+        private void pwd_password_PasswordChanged(object sender, RoutedEventArgs e)
         {
-            try
+            resultPassword = Handle.ValidateinputTypePassword(pwd_password.Password, password);
+            CheckSubmitEnable();
+        }
+
+        private void box_phone_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            resultPhone = Handle.ValidateinputTypePhone(box_phone.Text, phone);
+            CheckSubmitEnable();
+        }
+
+        private void box_address_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            resultAddress = Handle.ValidateinputTypeText(box_address.Text, address);
+            CheckSubmitEnable();
+        }
+        private void CheckSubmitEnable()
+        {
+            if (!resultAddress || !resultEmail || !resultFirstName || !resultLastName || !resultPassword || !resultPhone || img_Avatar.ProfilePicture == null)
             {
-                img_Avatar.ProfilePicture = new BitmapImage(new Uri(txb_UrlImage.Text, UriKind.Absolute));
-            } catch
+                IsPrimaryButtonEnabled = false;
+            } else
             {
-                img_Avatar.ProfilePicture = null;
+                IsPrimaryButtonEnabled = true;
             }
         }
     }

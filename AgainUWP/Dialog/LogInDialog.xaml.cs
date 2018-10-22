@@ -12,6 +12,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,49 +28,50 @@ namespace AgainUWP.Dialog
 {
     public sealed partial class LogInDialog : ContentDialog
     {
+        private bool validEmail = false;
+        private bool validPassword = false;
         public LogInDialog()
         {
             this.InitializeComponent();
+            CheckSubmitEnable();
         }
         
         private async void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
-            var email = tb_email.Text;
-            var password = pb_pass.Password;
-            errorEmail.Text = errorPassword.Text = errorMessage.Text = "";
-            var httpResponseMessage = APIHandle.Sign_In(email, password);
+            var tbemail = tb_email.Text;
+            var pbpassword = pb_pass.Password;
+            email.Text = password.Text = errorMessage.Text = "";
+            var httpResponseMessage = APIHandle.Sign_In(tbemail, pbpassword);
             if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
             {
-                await Handle.Login(email, password);
+                await Handle.Login(tbemail, pbpassword);
                 Frame rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Views.ListViewDemo));
             }
             else
             {
-                if (tb_email.Text == "" && pb_pass.Password != "")
+                var errorJson = await httpResponseMessage.Result.Content.ReadAsStringAsync();
+                ErrorResponse errResponse = JsonConvert.DeserializeObject<ErrorResponse>(errorJson);
+                foreach (var errorField in errResponse.error.Keys)
                 {
-                    errorEmail.Text = "Email empty";
-                }
-                else if (tb_email.Text != "" && pb_pass.Password == "")
-                {
-                    errorPassword.Text = "Pass empty";
-                }
-                else if (tb_email.Text == "" && pb_pass.Password == "")
-                {
-                    errorEmail.Text = "Email empty";
-                    errorPassword.Text = "Pass empty";
-                } else
-                {
-                    errorMessage.Text = "Email or Password incorrect";
+                    if (this.FindName(errorField) is TextBlock textBlock)
+                    {
+                        textBlock.Text = "*" + errResponse.error[errorField];
+                        Debug.WriteLine("'" + errorField + "' : '" + errResponse.error[errorField] + "'");
+                        textBlock.Visibility = Visibility.Visible;
+                        textBlock.Foreground = new SolidColorBrush(Colors.Red);
+                        textBlock.FontSize = 10;
+                        textBlock.FontStyle = FontStyle.Italic;
+                    }
                 }
                 args.Cancel = true;
             }
             if(rememberCheck.IsChecked == true)
             {
-                Handle.WriteFile("remember.txt", "true");
+                await Handle.WriteFile("remember.txt", "true");
             } else
             {
-                Handle.WriteFile("remember.txt", "");
+                await Handle.WriteFile("remember.txt", "");
             }
             //await Task.Delay(1000);
         }
@@ -78,6 +81,29 @@ namespace AgainUWP.Dialog
             this.Hide();
             RegisterDialog register = new RegisterDialog();
             await register.ShowAsync();
+        }
+
+        private void tb_email_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            validEmail = Handle.ValidateinputTypeEmail(tb_email.Text, email);
+            CheckSubmitEnable();
+        }
+
+        private void pb_pass_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            validPassword = Handle.ValidateinputTypePassword(pb_pass.Password, password);
+            CheckSubmitEnable();
+        }
+        private void CheckSubmitEnable()
+        {
+            if (!validEmail || !validPassword)
+            {
+                IsPrimaryButtonEnabled = false;
+            }
+            else
+            {
+                IsPrimaryButtonEnabled = true;
+            }
         }
     }
 }

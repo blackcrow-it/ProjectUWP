@@ -8,7 +8,7 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace AgainUWP.Emtity
 {
-    class SongLocal
+    public class SongLocal
     {
         private string _name;
         private string _singer;
