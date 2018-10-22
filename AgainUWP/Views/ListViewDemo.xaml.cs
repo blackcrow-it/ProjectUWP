@@ -32,6 +32,7 @@ using Windows.UI.Xaml.Navigation;
 using AgainUWP.Data;
 using Microsoft.Data.Sqlite;
 using System.Net.NetworkInformation;
+using Windows.Networking.Connectivity;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -62,20 +63,27 @@ namespace AgainUWP.Views
 
         public ListViewDemo()
         {
+            ConnectionProfile InternetConnectionProfile = NetworkInformation.GetInternetConnectionProfile();
+            bool isWLANConnection = (InternetConnectionProfile == null) ? false : InternetConnectionProfile.IsWlanConnectionProfile;
             this.ListSong = new ObservableCollection<Song>();
             this.ListSongRecent = new ObservableCollection<Song>();
             this.ListSongLocal = new ObservableCollection<SongLocal>();
             this.InitializeComponent();
-            LoadAllSongRecent(ListSongRecent);
             _timer.Interval = TimeSpan.FromMilliseconds(1000);
             _timer.Tick += TickTock;
             _timer.Start();
             LoadSongInMusicLibrary();
-            if (isInternetConnected)
+            if (isInternetConnected || isWLANConnection)
             {
+                LoadAllSongRecent(ListSongRecent);
                 LoadAllSong(ListSong);
                 GetAvatarHeader();
                 IsLogIn();
+            }
+            else
+            {
+
+                pivot.SelectedIndex = 2;
             }
         }
         private void LoadToPlaySong(ObservableCollection<Song> ListSongs, int index, ListView listView)
@@ -885,6 +893,7 @@ namespace AgainUWP.Views
             Application.Current.Resources["SystemControlHighlightListAccentMediumBrush"] = new SolidColorBrush(colorBackground.Color);
             //uriBackground.ImageSource = new BitmapImage(new Uri(linkBackground.Text));
             Debug.WriteLine(Application.Current.Resources["SystemControlHighlightListAccentLowBrush"]);
+            settingFlyput.Hide();
         }
     }
 }

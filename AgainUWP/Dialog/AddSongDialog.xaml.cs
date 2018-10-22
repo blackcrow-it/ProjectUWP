@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text.RegularExpressions;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
@@ -26,9 +27,15 @@ namespace AgainUWP.Dialog
 {
     public sealed partial class AddSongDialog : ContentDialog
     {
+        private bool validName = false;
+        private bool validSinger = false;
+        private bool validAuthor = false;
+        private bool validLink = false;
+        private bool validThumbnail = false;
         public AddSongDialog()
         {
             this.InitializeComponent();
+            CheckSubmitEnable();
         }
 
         private void AddSongDialog_Closing(ContentDialog sender, ContentDialogClosingEventArgs args)
@@ -52,6 +59,8 @@ namespace AgainUWP.Dialog
             {
                 thumbnailImage.ProfilePicture = null;
             }
+            Regex regex = new Regex(@"((https?|ftp|gopher|telnet|file|notes|ms-help):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*\.(gif|jpg|jpeg|tiff|png))");
+            validThumbnail = Handle.Validateinput(song_thumbnail.Text, regex, thumbnail);
         }
         private async void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
@@ -108,6 +117,42 @@ namespace AgainUWP.Dialog
             catch
             {
                 Debug.WriteLine("Error");
+            }
+        }
+
+        private void song_name_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            validName = Handle.ValidateinputTypeText(song_name.Text, name);
+            CheckSubmitEnable();
+        }
+
+        private void song_singer_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            validSinger = Handle.ValidateinputTypeText(song_singer.Text, singer);
+            CheckSubmitEnable();
+        }
+
+        private void song_author_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            validAuthor = Handle.ValidateinputTypeText(song_author.Text, author);
+            CheckSubmitEnable();
+        }
+
+        private void song_link_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Regex regex = new Regex(@"((https?|ftp|gopher|telnet|file|notes|ms-help):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*\.mp3)");
+            validLink = Handle.Validateinput(song_link.Text, regex, link);
+            CheckSubmitEnable();
+        }
+        private void CheckSubmitEnable()
+        {
+            if (!validAuthor || !validLink || !validSinger || !validThumbnail || !validName)
+            {
+                IsSecondaryButtonEnabled = false;
+            }
+            else
+            {
+                IsSecondaryButtonEnabled = true;
             }
         }
     }

@@ -54,20 +54,31 @@ WriteFile(string file_name, string text)
         }
         public static bool Validateinput (string input, Regex regex, TextBlock textBlock)
         {
-            if (regex.IsMatch(input))
+            if (input.Length < 1)
             {
-                Debug.WriteLine("Hợp lệ");
-                textBlock.Text = "*Valid";
-                textBlock.Foreground = new SolidColorBrush(Colors.Green);
+                textBlock.Text = "*Not empty or null";
+                textBlock.Foreground = new SolidColorBrush(Colors.Red);
+                textBlock.FontSize = 10;
+                textBlock.FontStyle = FontStyle.Italic;
                 return false;
             }
             else
             {
-                Debug.WriteLine("Không hợp lệ");
-                textBlock.Text = "*Invalid";
-                textBlock.Foreground = new SolidColorBrush(Colors.Red);
-                return true;
+                if (regex.IsMatch(input))
+                {
+                    textBlock.Text = "";
+                    return true;
+                }
+                else
+                {
+                    textBlock.Text = "*Invalid";
+                    textBlock.Foreground = new SolidColorBrush(Colors.Red);
+                    textBlock.FontSize = 10;
+                    textBlock.FontStyle = FontStyle.Italic;
+                    return false;
+                }
             }
+            
         }
         public static bool ValidateinputTypeName (string input, TextBlock textBlock)
         {

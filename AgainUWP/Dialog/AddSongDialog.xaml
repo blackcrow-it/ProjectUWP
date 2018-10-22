@@ -13,22 +13,22 @@
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
 
-    <StackPanel Grid.Column="0">
+    <StackPanel Grid.Column="0" Width="400">
         
             <PersonPicture x:Name="thumbnailImage" Width="75"/>
             <TextBox PlaceholderText="Link thumbnail" x:Name="song_thumbnail" Width="150" TextChanged="song_thumbnail_TextChanged" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
-            <TextBlock x:Name="thumbnail" Visibility="Collapsed"/>
+        <TextBlock x:Name="thumbnail" Width="150"/>
 
-        <TextBox PlaceholderText="Name" x:Name="song_name" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
-                <TextBlock x:Name="name" Visibility="Collapsed"/>
-        <TextBox PlaceholderText="Singer" x:Name="song_singer" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
-                <TextBlock x:Name="singer" Visibility="Collapsed"/>
-        <TextBox PlaceholderText="Author" x:Name="song_author" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
-        <TextBlock x:Name="author" Visibility="Collapsed"/>
-        <TextBox PlaceholderText="Link mp3" x:Name="song_link" BorderThickness="0 0 0 1" Margin="0 5 0 0"/>
-        <TextBlock x:Name="link" Visibility="Collapsed"/>
+        <TextBox PlaceholderText="Name" x:Name="song_name" BorderThickness="0 0 0 1" Margin="0 5 0 0" TextChanged="song_name_TextChanged"/>
+                <TextBlock x:Name="name"/>
+        <TextBox PlaceholderText="Singer" x:Name="song_singer" BorderThickness="0 0 0 1" Margin="0 5 0 0" TextChanged="song_singer_TextChanged"/>
+                <TextBlock x:Name="singer"/>
+        <TextBox PlaceholderText="Author" x:Name="song_author" BorderThickness="0 0 0 1" Margin="0 5 0 0" TextChanged="song_author_TextChanged"/>
+        <TextBlock x:Name="author"/>
+        <TextBox PlaceholderText="Link mp3" x:Name="song_link" BorderThickness="0 0 0 1" Margin="0 5 0 0" TextChanged="song_link_TextChanged"/>
+        <TextBlock x:Name="link"/>
         <TextBox Header="Description" x:Name="song_description" AcceptsReturn="True" Height="100"/>
-                <TextBlock x:Name="description" Visibility="Collapsed"/>
+                <TextBlock x:Name="description"/>
 
     </StackPanel>
 </ContentDialog>

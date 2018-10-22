@@ -10,7 +10,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <Grid>
         <Grid.Background>
-            <ImageBrush x:Name="uriBackground" Stretch="UniformToFill" ImageSource="https://media.giphy.com/media/l1J3vXGjuykBjNriM/giphy.gif" Opacity=".8"/>
+            <ImageBrush x:Name="uriBackground" Stretch="UniformToFill" ImageSource="/Assets/l1J3vXGjuykBjNriM.gif" Opacity=".8"/>
         </Grid.Background>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -53,7 +53,7 @@
                     </AppBarButton>
                     <AppBarButton Icon="Setting" Label="Setting">
                         <AppBarButton.Flyout>
-                            <Flyout LightDismissOverlayMode="On">
+                            <Flyout LightDismissOverlayMode="On" x:Name="settingFlyput">
                                 <StackPanel Orientation="Horizontal">
                                     <StackPanel>
                                         <ColorPicker x:Name="colorBackground" IsAlphaEnabled="True" IsAlphaTextInputVisible="False" IsAlphaSliderVisible="True" IsColorSliderVisible="False" IsColorChannelTextInputVisible="False"/>
@@ -70,7 +70,7 @@
             <!--<Pivot.LeftHeader>
                 <AppBarButton Icon="Back" Click="Back_Click"/>
             </Pivot.LeftHeader>-->
-            <PivotItem>
+            <PivotItem x:Name="online">
                 <PivotItem.Header>
                     <TextBlock Text="Online" FontSize="20"/>
                 </PivotItem.Header>
