@@ -80,7 +80,7 @@ namespace AgainUWP.Dialog
                 var httpResponseMessage = APIHandle.Create_Song(song, "Basic", token);
                 if (httpResponseMessage.Result.StatusCode == HttpStatusCode.Created)
                 {
-                    args.Cancel = false;
+                    this.Hide();
                     ContentDialog noWifiDialog = new ContentDialog()
                     {
                         Title = "Message",
